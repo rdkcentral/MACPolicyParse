@@ -1,0 +1,3 @@
+profile test_profile /usr/bin/test {
+            /nvram/test ix, 
+        }

@@ -1,0 +1,1 @@
+[ 1138.599968] audit: type=1400 audit(1663719518.320:751): apparmor="ALLOWED" operation="open" profile="test_versions" name="/proc/555/test/filter" pid=14993 comm="test_versions_comm"" requested_mask="r" denied_mask="r" fsuid=0 ouid=0

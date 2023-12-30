@@ -202,9 +202,10 @@ class GenProfiles:
             cur_list.sort(reverse=True, key=lambda p: (-p.count(os.path.sep), p))
 
             for cur_rule in cur_list:
-                # Last stage basic de-dup
-                if cur_rule in cur_profile:
-                    continue
+                # This is removed because it does partial matches, revisit
+                # if we find ourselves having dupe problems
+                #if cur_rule in cur_profile:
+                #    continue
 
                 # Subprofiles are handled differently, so no spacing or
                 # comma

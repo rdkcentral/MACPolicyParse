@@ -73,8 +73,12 @@ class RuleList:
         return self.pp.getObjList(name)
 
     def addFileList(self, profile, rule_list):
-        # XXX We really need to do something better here
-        norm_filename = profile.name.replace(".", "/").lstrip("/.")
+        # At one point here we did this:
+        #   norm_filename = profile.name.replace(".", "/").lstrip("/.")
+        # profile.name should report the . name, not
+        # including slashes. If we run into future problems with profile keys
+        # not matching properly, this is a good place to start looking
+        norm_filename = profile.name.lstrip("\.")
 
         if norm_filename not in self.log_parser.profile_names:
             self.log_parser.profile_names.append(norm_filename)

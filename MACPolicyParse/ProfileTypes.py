@@ -78,7 +78,11 @@ class ProfileHeaderRule(ProfileBase):
         if not self.isType(rule):
             return None
 
-        # XXX Add more validation here
+        # Some profiles have excessive spacing, remove those to avoid problems with
+        # naming.
+        while('' in rule):
+            rule.remove('')
+
         self.name = rule[1]
         self.path = rule[2]
         self.flags = rule[3]

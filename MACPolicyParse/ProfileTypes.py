@@ -167,6 +167,9 @@ class FileRule(ProfileBase):
         if "mod_" in filename:
             return filename
 
+        if not re.fullmatch("[A-Za-z\+\_\-0-9\.\*]+\.so([\s\.\0-9\*]+)?", os.path.basename(filename)):
+            return filename
+
         if filename == "/lib*.so*":
             # This is to remove an old, bad entry that was inserted due to a bug
             return ""

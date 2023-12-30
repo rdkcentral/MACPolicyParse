@@ -246,6 +246,9 @@ class OpFile(base_op):
         if "mod_" in filename:
             return filename
 
+        if not re.fullmatch("[A-Za-z\+\_\-0-9\.\*]+\.so([\s\.\0-9\*]+)?", os.path.basename(filename)):
+            return filename
+
         # There are cases that are not libraries: ld.so.*, mod_* (httpd modules), and ld-*.so
         # We also have the possibility of weirdness with /lib /usr/lib, etc, so break up
         # the path, then operate only on the filename, not assuming a 'lib' prefix

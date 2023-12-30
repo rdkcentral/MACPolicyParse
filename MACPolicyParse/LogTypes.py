@@ -281,7 +281,7 @@ class OpFile(base_op):
         new_rule += ".so"
 
         # If we match a suffix (.0.0.0) then replace with a wildcard
-        suffix_regex = ".*\.so\.[0-9]"
+        suffix_regex = ".*\.so\.[0-9a-zA-Z]"
         m = re.match(suffix_regex, lib_name)
         if m:
             new_rule += "*"

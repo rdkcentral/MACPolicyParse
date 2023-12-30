@@ -131,19 +131,18 @@ class GenProfiles:
 
             if not op.exe_name:
                 print("**** MANUAL EDIT REQUIRED ****")
-                print("WARNING: No profile path found for profile name " + op.name)
-                print("Using profile name as path.\n")
-                print("Edit required: Change path in the profile header to match process path")
+                print("WARNING: No profile filename found for profile name " + op.name)
+                print("Using profile name as filename.\n")
+                print("Edit required: Change process path in the profile header to match exe path")
                 print("****************")
                 op.exe_name = op.name
 
             if op.filename == "":
-                print(f"op.exe_name: {op.exe_name}")
                 op.filename = op.exe_name.replace("/", ".")
                 if op.filename and op.filename[0] == '.':
                     op.filename = op.filename[1:]
                 print("* Automatic profile path generation: ")
-                print(f"** For profile exe path \"{op.exe_name}\" using \"{op.filename}\" as profile path.")
+                print(f"** For profile exe path \"{op.exe_name}\" using \"{op.filename}\" as profile filename.")
     #
     # This initializes the list of OutputProfile objects, along with triggering duplicate
     # detections

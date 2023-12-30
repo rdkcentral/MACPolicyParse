@@ -199,6 +199,10 @@ class FileRule(ProfileBase):
         if m:
             new_rule += "*"
 
+        # Don't remove existing .so* sequences
+        if ".so*" in lib_name:
+            new_rule += "*"
+
         self.handled = True
 
         # This can happen if there is a bug here or a format we do not expect, it's not
@@ -207,7 +211,9 @@ class FileRule(ProfileBase):
             print("ERROR: fixLibraryVersions() created an invalid entry due to a bug")
             print("-> Original filename: ")
             print(filename)
-            print("Please submit the filename above as a bug report with this error.")
+            print("First, please verify there are no \"lib*.so*\" entries in the input profiles.")
+            print("If there are, please remove them and try again. If there are not, then ")
+            print("please submit the filename above as a bug report with this error.")
             sys.exit(0)
 
         return new_rule

@@ -117,6 +117,10 @@ class FileRule(ProfileBase):
         if ".so" in self.filename:
             self.filename = self.fixLibraryVersions(self.filename)
 
+            if self.filename == "" or self.filename == None:
+                # Empty spaces are cleaned up elsewhere
+                return ""
+
         return self.filename + " " + self.permissions
 
     def isType(self, rule):
@@ -158,6 +162,10 @@ class FileRule(ProfileBase):
 
         if "mod_" in filename:
             return filename
+
+        if filename == "/lib*.so*":
+            # This is to remove an old, bad entry that was inserted due to a bug
+            return ""
 
         # There are cases that are not libraries: ld.so.*, mod_* (httpd modules), and ld-*.so
         # We also have the possibility of weirdness with /lib /usr/lib, etc, so break up
@@ -201,6 +209,10 @@ class FileRule(ProfileBase):
 
         # Don't remove existing .so* sequences
         if ".so*" in lib_name:
+            new_rule += "*"
+
+        if ".so.*" in lib_name:
+            new_rule = new_rule.replace(".so.*", ".so")
             new_rule += "*"
 
         self.handled = True

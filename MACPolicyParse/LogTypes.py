@@ -195,7 +195,7 @@ class OpFile(base_op):
         cur_mask = cur_mask.replace("c", "w")
         cur_mask = cur_mask.replace("d", "w")
 
-        if 'a' in cur_mask:
+        if 'a' in cur_mask and 'w' in cur_mask:
             cur_mask = cur_mask.replace("a", "w")
 
         self.name = self.name.strip("\"")

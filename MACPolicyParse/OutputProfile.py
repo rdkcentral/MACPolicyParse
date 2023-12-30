@@ -206,7 +206,8 @@ class GenProfiles:
                 # if we find ourselves having dupe problems
                 #if cur_rule in cur_profile:
                 #    continue
-
+                if cur_rule == "":
+                    continue
                 # Subprofiles are handled differently, so no spacing or
                 # comma
                 if cur_rule.split()[0] == "profile":

@@ -61,7 +61,7 @@ class Profile:
         if type(rule) is not list:
             print("WARNING: Non-list passed to addRuleList")
             return
-        if rule[0] == '' or rule[0] == '}' or rule[0] == "#" or rule[0] == "#include":
+        if rule[0] == '' or rule[0] == '}':
             # Ignore these for now, make a class for them later XXX
             if rule[0] == '}' and self._subprofile_ctx != None:
                 # This ends the subprofile state, null the state and
@@ -73,10 +73,20 @@ class Profile:
                 self._cur_objlist = self.rule_objlist
             return
 
+        # Ignore comments but not #includes
+        if rule[0] == "#" and not rule[0] == "#include":
+            return
+
         # modified "ew" to a list comprehension. should work well?
         rule = [a.strip("\n,}") for a in rule]
         if rule[0] == '':
             return
+
+        # The final parsed rule should have no extra spaces in it, so we need to remove
+        # any we find in the final rule list
+        while('' in rule):
+            rule.remove('')
+
 
         if FileRule().isType(rule):
             fr = FileRule()
@@ -133,9 +143,13 @@ class Profile:
             ptr = PtraceRule()
             ptr.parse(rule)
             self._cur_objlist.append(ptr)
+        elif IncludeRule().isType(rule):
+            ptr = IncludeRule()
+            ptr.parse(rule)
+            self._cur_objlist.append(ptr)
         else:
-            #print("WARNING: Unknown rule type for rule. No rule added")
-            #print("Rule: " + str(rule))
+            print("WARNING: Unknown rule type for rule. No rule added")
+            print("Rule: " + str(rule))
             return
 
 #

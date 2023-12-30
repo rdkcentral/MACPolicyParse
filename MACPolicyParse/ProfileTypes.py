@@ -34,7 +34,9 @@ class ProfileBase:
             return False
 
         if size != None and len(rule) != size:
-            #print("validateList failure.")
+            # This function is called for identification of types, which
+            # means this is a non-error since it'll be called on everything
+            #print("validateList len failure.")
             return False
 
         return True
@@ -406,3 +408,37 @@ class TransitionProfileRule(ProfileBase):
             rule_str += "   }\n"
 
             return rule_str
+
+class IncludeRule(ProfileBase):
+
+    def __init__(self):
+        ProfileBase.__init__(self)
+        self.priority = 120
+        self.include_path = ""
+
+        return
+
+    def getDefaultRule(self):
+        # XXX validate
+        return "#include " + self.include_path
+
+    def isType(self, rule):
+        rule = [ele for ele in rule if ele.strip()]
+        if not ProfileBase.validateList(ProfileBase(), rule, 2):
+            return False
+
+        if rule[0] == ("#include"):
+            print("Include rule found.")
+            return True
+
+        return False
+
+    def parse(self, rule):
+        if not ProfileBase.validateList(ProfileBase(), rule, 2):
+            return None
+
+        if not self.isType(rule):
+            return None
+
+        self.include_path = rule[1]
+        print("Include path: " + rule[1])

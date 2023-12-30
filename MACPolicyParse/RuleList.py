@@ -90,35 +90,3 @@ class RuleList:
         print("WARNING: addFileEntry has duplicate filenames, one was discarded") # XXX handle this better
         return
 
-    def DeDuplicate(self, entry=None):
-        '''
-        Specifically operates on OpFile objects. Removes superseded rwx requested masks.
-
-        type entry: key in dict
-        '''
-        # TODO: determining this kind of priority in a robust manner is actually going to be way more complicated... See: http://manpages.ubuntu.com/manpages/xenial/man5/apparmor.d.5.html
-        #           FILE RULE = [ QUALIFIERS ] [ 'owner' ] ( 'file' | [ 'file' ] ( FILEGLOB ACCESS  |
-        #           ACCESS FILEGLOB ) [ '->' EXEC TARGET ] )
-        object_sorter = {}
-        dedup_list = []
-        # We're basing this on logs and files, but log files won't necessarily have entries in them. Skip cases where we are trying
-        # to de-dup a file without the relevant log entries
-        if entry not in self.log_parser.entries:
-            return
-
-        if not entry or len(self.log_parser.entries[entry].objlist) == 0:
-            return
-
-
-        for obj in self.log_parser.entries[entry].objlist:
-            if not isinstance(obj, OpFile): # look specifically for opfiles. XXX do capability rules have any special consideration?
-                dedup_list.append(obj)  # XXX For now, just add anything that isn't a file
-                continue
-
-            object_sorter[obj.name] = obj
-
-        for _, rule in object_sorter.items():
-            dedup_list.append(rule)
-        return dedup_list
-
-

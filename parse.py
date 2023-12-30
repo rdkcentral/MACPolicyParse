@@ -54,14 +54,16 @@ def main():
         create_profile(args.create, args.write)
         return 0
 
-    if not args.profile_dir or not args.log_file:
-        print("--profile_dir and --log_file are required.")
+    if not args.profile_dir :
+        print("--profile_dir is required.")
         return -1
 
     op = GenProfiles()
 
     op.ParseExistingProfiles(args.profile_dir)
-    op.ParseLogFile(args.log_file)
+
+    if args.log_file:
+        op.ParseLogFile(args.log_file)
 
     dlist = op.generatePolicyFileList()
 

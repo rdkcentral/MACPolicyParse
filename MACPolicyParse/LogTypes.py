@@ -89,14 +89,19 @@ class OpCapable(base_op):
             return True
         if "capname" in parsed_dict:
             return True
+        if "capable" in parsed_dict["operation"]:
+            return True
         return False
 
     def isDuplicate(self):
-        # XXX -- this can be replaced with the __eq__ function right?
         return False
 
-    def getDefaultRule(self): # XXX with __repr__ maybe we can remove this.
-        return "capability " + self.capname.strip("\"")
+    def getDefaultRule(self):
+        if self.capname:
+            return "capability " + self.capname.strip("\"")
+
+        if self.name:
+            return "capability " + self.name.strip("\"")
 
     def __hash__(self):
         return hash(("capability ", self.capname.strip("\"")))

@@ -100,7 +100,7 @@ class GenProfiles:
         else:
             self.rl = rl
 
-    def ParseExistingProfiles(self, profile_path):
+    def ParseExistingProfiles(self, profile_path, skip):
         self.rl.loadExistingProfiles(profile_path)
 
     def ParseLogFile(self, path):

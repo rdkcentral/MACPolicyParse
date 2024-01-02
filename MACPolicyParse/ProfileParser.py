@@ -184,8 +184,12 @@ class ProfileParser:
             self.names_list.append(cp.name)
             self.entries[cp.name] = cp
 
-    def loadProfilesDir(self, path):
+    def loadProfilesDir(self, path, skip):
         for x in os.listdir(path):
+            if os.path.basename(skip_profile) == os.path.basename(x):
+                print("Skipping profile due to skip_profile arg: " + x)
+                continue
+
             self.loadProfile(path, x)
 
     # XXX Add more getters here so that the underlying objects are opaque

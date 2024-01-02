@@ -47,6 +47,7 @@ def main():
     ap.add_argument("--write", help="Writes generated profiles to <dst>")
     ap.add_argument("--create", help="Write a profile for <proc path>")
     ap.add_argument("--diff", help="Compare the original profile and the new one", action="store_true")
+    ap.add_argument("--skip_profile", help="Skip this profile and copy it to the write dir unmodified", required=False)
 
     args = ap.parse_args()
 
@@ -60,7 +61,7 @@ def main():
 
     op = GenProfiles()
 
-    op.ParseExistingProfiles(args.profile_dir)
+    op.ParseExistingProfiles(args.profile_dir, args.skip_profile)
 
     if args.log_file:
         op.ParseLogFile(args.log_file)
@@ -92,6 +93,8 @@ def main():
             fp = open("_aa_diff_tmp/" + entry["filename"], "w")
             fp.write(entry["profile"])
             fp.close()
+
+            shutil.copyfile(args.skip_profile, args.write + os.path.basename(args.skip_profile))
 
         new_op = GenProfiles()
         new_op.ParseExistingProfiles("_aa_diff_tmp/")

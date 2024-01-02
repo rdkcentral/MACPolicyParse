@@ -44,9 +44,9 @@ class RuleList:
 
     #
     # Primary front end for inserting data related to existing profiles
-    def loadExistingProfiles(self, profile_path):
+    def loadExistingProfiles(self, profile_path, skip):
         # Load existing profiles
-        self.pp.loadProfilesDir(profile_path)
+        self.pp.loadProfilesDir(profile_path, skip)
 
         for key in self.pp.names_list:
             print("Initializing for profile: " + self.pp.entries[key].name)

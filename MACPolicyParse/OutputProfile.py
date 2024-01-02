@@ -35,6 +35,8 @@ class OutputProfile:
         self.include_list = []
         self.include_count = 0
 
+        self.header = None
+
     def getProfileStamp(self):
         now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         return f'# Automated profile generated on {now}\n'
@@ -43,6 +45,13 @@ class OutputProfile:
             if self.name == "" or self.exe_name == "":
                 # This shouldn't happen but the log files are potentially mangled
                 return ""
+
+            # If we have a set header, use that
+            if isinstance(self.header, ProfileHeaderRule):
+                return self.header.getProfileHeader() + "\n"
+
+            print("Using default header for profile: " + self.name)
+
             return f"profile {self.name} {self.exe_name} flags=(complain) {{\n"
 
     def addRule(self, rule, raw_obj=None):
@@ -128,6 +137,7 @@ class GenProfiles:
             op.profile_entries = self.GetProfileEntriesForName(op.name)
             op.log_entries = self.GetLogEntriesForName(op.name)
             op.exe_name = self.rl.getProfilePath(op.name)
+            op.filename = self.rl.getProfileFilename(op.name)
 
             if not op.exe_name:
                 print("**** MANUAL EDIT REQUIRED ****")
@@ -164,6 +174,12 @@ class GenProfiles:
                 loglist, profilelist = self.deDuplicate_Log(self.rl.getLogObjList(name), profilelist)
 
             for entry in profilelist:
+                # Profile headers are a special case, we track it in the OP because the
+                # profile header may need to be regenerated during profile creation
+                if isinstance(entry, ProfileHeaderRule):
+                    op.header = entry
+                    continue
+
                 op.addRule(entry.getDefaultRule(), entry)
 
             for entry in loglist:
@@ -189,12 +205,13 @@ class GenProfiles:
         #oi.parseForIncludes(opli)
 
         for op in opli:
-            cur_profile = op.getProfileStamp()
+            # Profile timestamps can be re-added here, if need be
+            cur_profile = "" #op.getProfileStamp()
             header = op.getProfileHeader()
             if header == "":
                 # Error
                 print("Empty profile name/header fields.")
-                continue
+                sys.exit(0)
             cur_profile += header
 
             cur_list = op.getRuleList()
@@ -215,7 +232,7 @@ class GenProfiles:
                 else:
                     cur_profile += "    " + cur_rule + ",\n"
 
-            cur_profile += "}"
+            cur_profile += "}\n"
 
             if op.filename == "":
                 print("**** MANUAL EDIT REQUIRED ****")

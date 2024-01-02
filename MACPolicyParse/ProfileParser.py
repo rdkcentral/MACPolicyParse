@@ -129,8 +129,7 @@ class Profile:
             self.name = pr.name
             self.exe_path = pr.path
 
-            # Profile headers are NOT appended
-            #self.rule_objlist.append(pr)
+            self.rule_objlist.append(pr)
 
             return
         elif SignalRule().isType(rule):
@@ -148,8 +147,16 @@ class Profile:
             ptr.parse(rule)
             self._cur_objlist.append(ptr)
         else:
-            print("WARNING: Unknown rule type for rule. No rule added")
+            print("WARNING: Unknown rule type for rule. Raw rule added.")
+            print("Raw rules are not validated, parsed, or updated. Please file")
+            print("An issue with the contents of the rule below so we can implement")
+            print("support for this rule type.")
             print("Rule: " + str(rule))
+
+            ptr = RawRule()
+            ptr.setRawRule(rule)
+            self._cur_objlist.append(ptr)
+
             return
 
 #
@@ -207,6 +214,13 @@ class ProfileParser:
 
     def getNameList(self):
         return self.names_list
+
+    def getFilename(self, name):
+        if name in self.entries:
+            return self.entries[name].filename
+        else:
+            return None
+
 
     def getPath(self, name):
         if name in self.entries:

@@ -98,16 +98,11 @@ class ProfileHeaderRule(ProfileBase):
                 else:
                     self.flags += x
 
-    #
-    # This could be better, but profiles are a special case, hence why
-    # they are handled here instead of getDefaultRule()
-    def genProfileHeader(self, name, path, mode="complain"):
-        self.profile_type.name = name
-        self.profile_type.path = path
-        # Ignore flags for now
-
-        flags = f"flags=({mode})"
-        return f"profile {name + path + flags}{{\n"
+   # We use this instead of getDefaultRule() since it's not part of the other
+    # class calls
+    def getProfileHeader(self):
+        hdr = "profile " + self.name + " " + self.path + " " + self.flags + " {"
+        return hdr
 
     def getDefaultRule(self):
         # Ignore the profile rules
@@ -450,3 +445,37 @@ class IncludeRule(ProfileBase):
 
         self.include_path = rule[1]
         print("Include path: " + rule[1])
+# These are rules that fall into the unknown bucket. In order to
+# preserve the sanity of existing profiles, we error on this during
+# parsing, but we can't discard these cases. We retain the rule as
+# raw text but add an error that it needs to be sent in and filed
+# as an issue so we can add support for the rule type
+class RawRule(ProfileBase):
+    raw_rule = ""
+    def __init__(self, line_num=-1):
+        ProfileBase.__init__(self, line_num=line_num)
+        self.priority = 12
+        self.raw_rule = ""
+        return
+
+    def getDefaultRule(self):
+        return " ".join(self.raw_rule)
+
+    def isType(self, rule):
+        # This can be dangerous, we have to explicitly call this instead of using
+        # isType() checks. We always return false here, but this should never
+        # be called.
+        print("WARNING: RawRule.isType() should never be called.\n")
+        return False
+
+    def parse(self, rule):
+        print("WARNING: RawRule.parse() should never be called.\n")
+        return None
+
+    def setRawRule(self, rule_txt):
+        self.raw_rule = rule_txt
+
+    # XXX Fix this
+    def diff(self, obj_list):
+        return None
+

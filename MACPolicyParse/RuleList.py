@@ -69,6 +69,9 @@ class RuleList:
     def getProfilePath(self, name):
         return self.pp.getPath(name)
 
+    def getProfileFilename(self, name):
+        return self.pp.getFilename(name)
+
     def getProfileObjList(self, name):
         return self.pp.getObjList(name)
 

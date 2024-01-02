@@ -61,11 +61,11 @@ def main():
 
     if args.skip_profiles:
         skiplist = args.skip_profiles.split(",")
-        for fpath in skiplist:
-            # Ignore copying files that exist in the same directory we are using
-            if os.path.basename(fpath) == args.profile_dir:
-                continue
-            shutil.copyfile(args.profile_dir + fpath, args.write + os.path.basename(fpath))
+
+        if args.write and args.write != args.profile_dir:
+            for fpath in skiplist:
+                # Ignore copying files that exist in the same directory we are using
+                shutil.copyfile(args.profile_dir + fpath, args.write + os.path.basename(fpath))
     else:
         skiplist=None
 

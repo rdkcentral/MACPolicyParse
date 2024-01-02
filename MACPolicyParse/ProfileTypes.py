@@ -35,7 +35,7 @@ class ProfileBase:
 
         if size != None and len(rule) != size:
             # This function is called for identification of types, which
-            # means this is a non-error since it'll be called on everything
+            #d means this is a non-error since it'll be called on everything
             #print("validateList len failure.")
             return False
 
@@ -135,7 +135,7 @@ class FileRule(ProfileBase):
 
         # XXX Possibly incomplete
         # XXX This currently doesn't handle cases whee the filename doesn't start with a slash
-        file_perm_list = ['r', 'w', 'm', 'x', 'a', 'c', 'd']
+        file_perm_list = ['r', 'w', 'm', 'x', 'a', 'c', 'd', 'k']
         perm_result = [ele for ele in file_perm_list if(ele in rule[1])]
         if rule[0].startswith("/") and bool(perm_result):
             return True

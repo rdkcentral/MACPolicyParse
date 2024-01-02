@@ -193,7 +193,7 @@ class FileRule(ProfileBase):
         new_rule += lib_path
 
         # If we match a version (-1.1.1.1) then replace with a wildcard
-        ver_regex = "([A-Za-z\+\_]+)+(-[0-9]\.)"
+        ver_regex = "(.+)(-[0-9]\.)+"
         m = re.match(ver_regex, lib_name)
 
         if m:

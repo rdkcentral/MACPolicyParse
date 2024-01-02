@@ -432,7 +432,6 @@ class IncludeRule(ProfileBase):
             return False
 
         if rule[0] == ("#include"):
-            print("Include rule found.")
             return True
 
         return False
@@ -445,7 +444,7 @@ class IncludeRule(ProfileBase):
             return None
 
         self.include_path = rule[1]
-        print("Include path: " + rule[1])
+
 # These are rules that fall into the unknown bucket. In order to
 # preserve the sanity of existing profiles, we error on this during
 # parsing, but we can't discard these cases. We retain the rule as

@@ -17,6 +17,7 @@
 import re
 from .Filter import *
 import sys
+import os
 
 class base_op:
     action = ""

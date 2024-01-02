@@ -221,7 +221,6 @@ class ProfileParser:
         else:
             return None
 
-
     def getPath(self, name):
         if name in self.entries:
             return self.entries[name].exe_path

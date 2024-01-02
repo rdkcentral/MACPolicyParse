@@ -15,6 +15,7 @@
 #
 
 import re
+import os
 from .Diff import *
 
 class ProfileBase:
@@ -453,7 +454,7 @@ class IncludeRule(ProfileBase):
 class RawRule(ProfileBase):
     raw_rule = ""
     def __init__(self, line_num=-1):
-        ProfileBase.__init__(self, line_num=line_num)
+        ProfileBase.__init__(self)
         self.priority = 12
         self.raw_rule = ""
         return

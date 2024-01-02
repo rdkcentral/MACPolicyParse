@@ -193,7 +193,7 @@ class ProfileParser:
 
     def loadProfilesDir(self, path, skip):
         for x in os.listdir(path):
-            if skip and x in skiplist:
+            if skip and x in skip:
                 print("Skipping profile due to skip_profile arg: " + x)
                 continue
 

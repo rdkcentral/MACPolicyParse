@@ -110,7 +110,7 @@ class GenProfiles:
             self.rl = rl
 
     def ParseExistingProfiles(self, profile_path, skip):
-        self.rl.loadExistingProfiles(profile_path)
+        self.rl.loadExistingProfiles(profile_path, skip)
 
     def ParseLogFile(self, path):
         self.rl.parseLogfile(path)

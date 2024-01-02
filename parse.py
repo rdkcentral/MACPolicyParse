@@ -47,7 +47,7 @@ def main():
     ap.add_argument("--write", help="Writes generated profiles to <dst>")
     ap.add_argument("--create", help="Write a profile for <proc path>")
     ap.add_argument("--diff", help="Compare the original profile and the new one", action="store_true")
-    ap.add_argument("--skip_profiles", help="Comma separated list of profile paths to skip - MUST BE A PROFILE PATH", required=False)
+    ap.add_argument("--skip_profiles", help="Comma separated list of profile filenames in profile_dir to skip", required=False)
 
     args = ap.parse_args()
 

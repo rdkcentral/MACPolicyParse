@@ -87,8 +87,16 @@ class ProfileHeaderRule(ProfileBase):
 
         self.name = rule[1]
         self.path = rule[2]
-        self.flags = rule[3]
-        # XXX Add flags
+        if len(rule) <= 3:
+            self.flags = rule[3]
+        else:
+            for idx, x, in enumerate(rule[3:]):
+                if "{" in x:
+                    break
+                if ")" not in x:
+                    self.flags += x + ", "
+                else:
+                    self.flags += x
 
     #
     # This could be better, but profiles are a special case, hence why

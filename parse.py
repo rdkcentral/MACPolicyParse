@@ -47,7 +47,7 @@ def main():
     ap.add_argument("--write", help="Writes generated profiles to <dst>")
     ap.add_argument("--create", help="Write a profile for <proc path>")
     ap.add_argument("--diff", help="Compare the original profile and the new one", action="store_true")
-    ap.add_argument("--skip_profile", help="Skip this profile and copy it to the write dir unmodified", required=False)
+    ap.add_argument("--skip_profiles", help="Comma separated list of profile paths to skip - MUST BE A PROFILE PATH", required=False)
 
     args = ap.parse_args()
 
@@ -59,9 +59,19 @@ def main():
         print("--profile_dir is required.")
         return -1
 
+    if args.skip_profiles:
+        skiplist = args.skip_profiles.split(",")
+        for fpath in skiplist:
+            # Ignore copying files that exist in the same directory we are using
+            if os.path.basename(fpath) == args.profile_dir:
+                continue
+            shutil.copyfile(args.profile_dir + fpath, args.write + os.path.basename(fpath))
+    else:
+        skiplist=None
+
     op = GenProfiles()
 
-    op.ParseExistingProfiles(args.profile_dir, args.skip_profile)
+    op.ParseExistingProfiles(args.profile_dir, skiplist)
 
     if args.log_file:
         op.ParseLogFile(args.log_file)
@@ -94,7 +104,8 @@ def main():
             fp.write(entry["profile"])
             fp.close()
 
-            shutil.copyfile(args.skip_profile, args.write + os.path.basename(args.skip_profile))
+            if args.skip_profile:
+                shutil.copyfile(args.skip_profile, args.write + os.path.basename(args.skip_profile))
 
         new_op = GenProfiles()
         new_op.ParseExistingProfiles("_aa_diff_tmp/")

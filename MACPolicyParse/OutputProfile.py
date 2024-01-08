@@ -141,13 +141,13 @@ class GenProfiles:
 
             if not op.exe_name:
                 print("**** MANUAL EDIT REQUIRED ****")
-                print("WARNING: No profile filename found for profile name " + op.name)
-                print("Using profile name as filename.\n")
+                print("WARNING: No executable path found for profile name " + op.name)
+                print("Using profile name as executable path.\n")
                 print("Edit required: Change process path in the profile header to match exe path")
                 print("****************")
                 op.exe_name = op.name
 
-            if op.filename == "":
+            if op.filename == "" or op.filename == None:
                 op.filename = op.exe_name.replace("/", ".")
                 if op.filename and op.filename[0] == '.':
                     op.filename = op.filename[1:]

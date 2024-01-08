@@ -79,15 +79,15 @@ def main():
     dlist = op.generatePolicyFileList()
 
     for entry in dlist:
+        if not entry["filename"]:
+            print("Error: Profile list entry found a profile without a name.")
+            print("This usually happens when a log line has a profile")
+            print("name that can't be reconciled to a profile in profile_dir")
+            continue
+
         if not args.write:
-            if entry["filename"]:
                 print("Profile name: " + entry["filename"])
                 print(entry["profile"])
-            else:
-                print("Profile list entry found a profile without a name.")
-                print("This usually happens when a log line has a profile")
-                print("name that can't be reconciled to a profile in profile_dir")
-
                 continue
         else:
             fp = open(args.write + entry["filename"], "w")

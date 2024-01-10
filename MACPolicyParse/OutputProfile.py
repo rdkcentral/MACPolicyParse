@@ -35,6 +35,8 @@ class OutputProfile:
         self.include_list = []
         self.include_count = 0
 
+        self.header = None
+
     def getProfileStamp(self):
         now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         return f'# Automated profile generated on {now}\n'
@@ -43,6 +45,13 @@ class OutputProfile:
             if self.name == "" or self.exe_name == "":
                 # This shouldn't happen but the log files are potentially mangled
                 return ""
+
+            # If we have a set header, use that
+            if isinstance(self.header, ProfileHeaderRule):
+                return self.header.getProfileHeader() + "\n"
+
+            print("Using default header for profile: " + self.name)
+
             return f"profile {self.name} {self.exe_name} flags=(complain) {{\n"
 
     def addRule(self, rule, raw_obj=None):
@@ -100,8 +109,8 @@ class GenProfiles:
         else:
             self.rl = rl
 
-    def ParseExistingProfiles(self, profile_path):
-        self.rl.loadExistingProfiles(profile_path)
+    def ParseExistingProfiles(self, profile_path, skip):
+        self.rl.loadExistingProfiles(profile_path, skip)
 
     def ParseLogFile(self, path):
         self.rl.parseLogfile(path)
@@ -128,22 +137,26 @@ class GenProfiles:
             op.profile_entries = self.GetProfileEntriesForName(op.name)
             op.log_entries = self.GetLogEntriesForName(op.name)
             op.exe_name = self.rl.getProfilePath(op.name)
+            op.filename = self.rl.getProfileFilename(op.name)
 
             if not op.exe_name:
                 print("**** MANUAL EDIT REQUIRED ****")
-                print("WARNING: No profile path found for profile name " + op.name)
-                print("Using profile name as path.\n")
-                print("Edit required: Change path in the profile header to match process path")
+                print("WARNING: No executable path found for profile name " + op.name)
+                print(" Using profile name as executable path.\n")
+                print(" Edit required: Change process path in the profile header to match exe path")
                 print("****************")
                 op.exe_name = op.name
 
-            if op.filename == "":
-                print(f"op.exe_name: {op.exe_name}")
+            if op.filename == "" or op.filename == None:
                 op.filename = op.exe_name.replace("/", ".")
                 if op.filename and op.filename[0] == '.':
                     op.filename = op.filename[1:]
-                print("* Automatic profile path generation: ")
-                print(f"** For profile exe path \"{op.exe_name}\" using \"{op.filename}\" as profile path.")
+
+                print("**** MANUAL EDIT REQUIRED ****")
+                print("WARNING: For profile name " + op.name + " profile filename had to be auto generated")
+                print(" the resulting file path may be incorrect, please verify the proper output file was used")
+                print(" Edit required: Verify the output profile name of " + op.filename + " is correct")
+                print("****************")
     #
     # This initializes the list of OutputProfile objects, along with triggering duplicate
     # detections
@@ -165,6 +178,12 @@ class GenProfiles:
                 loglist, profilelist = self.deDuplicate_Log(self.rl.getLogObjList(name), profilelist)
 
             for entry in profilelist:
+                # Profile headers are a special case, we track it in the OP because the
+                # profile header may need to be regenerated during profile creation
+                if isinstance(entry, ProfileHeaderRule):
+                    op.header = entry
+                    continue
+
                 op.addRule(entry.getDefaultRule(), entry)
 
             for entry in loglist:
@@ -190,12 +209,13 @@ class GenProfiles:
         #oi.parseForIncludes(opli)
 
         for op in opli:
-            cur_profile = op.getProfileStamp()
+            # Profile timestamps can be re-added here, if need be
+            cur_profile = "" #op.getProfileStamp()
             header = op.getProfileHeader()
             if header == "":
                 # Error
                 print("Empty profile name/header fields.")
-                continue
+                sys.exit(0)
             cur_profile += header
 
             cur_list = op.getRuleList()
@@ -203,10 +223,12 @@ class GenProfiles:
             cur_list.sort(reverse=True, key=lambda p: (-p.count(os.path.sep), p))
 
             for cur_rule in cur_list:
-                # Last stage basic de-dup
-                if cur_rule in cur_profile:
+                # This is removed because it does partial matches, revisit
+                # if we find ourselves having dupe problems
+                #if cur_rule in cur_profile:
+                #    continue
+                if cur_rule == "":
                     continue
-
                 # Subprofiles are handled differently, so no spacing or
                 # comma
                 if cur_rule.split()[0] == "profile":
@@ -214,7 +236,7 @@ class GenProfiles:
                 else:
                     cur_profile += "    " + cur_rule + ",\n"
 
-            cur_profile += "}"
+            cur_profile += "}\n"
 
             if op.filename == "":
                 print("**** MANUAL EDIT REQUIRED ****")

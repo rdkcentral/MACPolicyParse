@@ -47,6 +47,7 @@ def main():
     ap.add_argument("--write", help="Writes generated profiles to <dst>")
     ap.add_argument("--create", help="Write a profile for <proc path>")
     ap.add_argument("--diff", help="Compare the original profile and the new one", action="store_true")
+    ap.add_argument("--skip_profiles", help="Comma separated list of profile filenames in profile_dir to skip", required=False)
 
     args = ap.parse_args()
 
@@ -54,21 +55,40 @@ def main():
         create_profile(args.create, args.write)
         return 0
 
-    if not args.profile_dir or not args.log_file:
-        print("--profile_dir and --log_file are required.")
+    if not args.profile_dir :
+        print("--profile_dir is required.")
         return -1
+
+    if args.skip_profiles:
+        skiplist = args.skip_profiles.split(",")
+
+        if args.write and args.write != args.profile_dir:
+            for fpath in skiplist:
+                # Ignore copying files that exist in the same directory we are using
+                shutil.copyfile(args.profile_dir + fpath, args.write + os.path.basename(fpath))
+    else:
+        skiplist=None
 
     op = GenProfiles()
 
-    op.ParseExistingProfiles(args.profile_dir)
-    op.ParseLogFile(args.log_file)
+    op.ParseExistingProfiles(args.profile_dir, skiplist)
+
+    if args.log_file:
+        op.ParseLogFile(args.log_file)
 
     dlist = op.generatePolicyFileList()
 
     for entry in dlist:
+        if not entry["filename"]:
+            print("Error: Profile list entry found a profile without a name.")
+            print("This usually happens when a log line has a profile")
+            print("name that can't be reconciled to a profile in profile_dir")
+            continue
+
         if not args.write:
                 print("Profile name: " + entry["filename"])
                 print(entry["profile"])
+                continue
         else:
             fp = open(args.write + entry["filename"], "w")
             fp.write(entry["profile"])
@@ -90,6 +110,9 @@ def main():
             fp = open("_aa_diff_tmp/" + entry["filename"], "w")
             fp.write(entry["profile"])
             fp.close()
+
+            if args.skip_profile:
+                shutil.copyfile(args.skip_profile, args.write + os.path.basename(args.skip_profile))
 
         new_op = GenProfiles()
         new_op.ParseExistingProfiles("_aa_diff_tmp/")

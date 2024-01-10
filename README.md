@@ -18,12 +18,13 @@ Requires Python 3+
 usage: parse.py [-h] [--profile_dir PROFILE_DIR] [--log_file LOG_FILE] [--display] [--write WRITE] [--create CREATE]
 
 optional arguments:
-  -h, --help            show this help message and exit
+  -h, --help                show this help message and exit
   --profile_dir PROFILE_DIR
-                        Directory containing current profiles
-  --log_file LOG_FILE   Single log file for parsing
-  --display             Prints generated files
-  --write WRITE         Writes generated profiles to <dst>
-  --create CREATE       Write a profile for <proc path>
+                            Directory containing current profiles
+  --log_file LOG_FILE       Single log file for parsing
+  --display                 Prints generated files
+  --write WRITE             Writes generated profiles to <dst>
+  --create CREATE           Write a profile for <proc path>
+  --skip_profiles <list>    Comma separated list of profile filenames in profile_dir to skip parsing (e.g. profila,profileb,profilec)
   ```
 

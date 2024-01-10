@@ -61,7 +61,7 @@ class Profile:
         if type(rule) is not list:
             print("WARNING: Non-list passed to addRuleList")
             return
-        if rule[0] == '' or rule[0] == '}' or rule[0] == "#" or rule[0] == "#include":
+        if rule[0] == '' or rule[0] == '}':
             # Ignore these for now, make a class for them later XXX
             if rule[0] == '}' and self._subprofile_ctx != None:
                 # This ends the subprofile state, null the state and
@@ -73,10 +73,20 @@ class Profile:
                 self._cur_objlist = self.rule_objlist
             return
 
+        # Ignore comments but not #includes
+        if rule[0] == "#" and not rule[0] == "#include":
+            return
+
         # modified "ew" to a list comprehension. should work well?
         rule = [a.strip("\n,}") for a in rule]
         if rule[0] == '':
             return
+
+        # The final parsed rule should have no extra spaces in it, so we need to remove
+        # any we find in the final rule list
+        while('' in rule):
+            rule.remove('')
+
 
         if FileRule().isType(rule):
             fr = FileRule()
@@ -119,8 +129,7 @@ class Profile:
             self.name = pr.name
             self.exe_path = pr.path
 
-            # Profile headers are NOT appended
-            #self.rule_objlist.append(pr)
+            self.rule_objlist.append(pr)
 
             return
         elif SignalRule().isType(rule):
@@ -133,9 +142,21 @@ class Profile:
             ptr = PtraceRule()
             ptr.parse(rule)
             self._cur_objlist.append(ptr)
+        elif IncludeRule().isType(rule):
+            ptr = IncludeRule()
+            ptr.parse(rule)
+            self._cur_objlist.append(ptr)
         else:
-            #print("WARNING: Unknown rule type for rule. No rule added")
-            #print("Rule: " + str(rule))
+            print("WARNING: Unknown rule type for rule. Raw rule added.")
+            print("Raw rules are not validated, parsed, or updated. Please file")
+            print("An issue with the contents of the rule below so we can implement")
+            print("support for this rule type.")
+            print("Rule: " + str(rule))
+
+            ptr = RawRule()
+            ptr.setRawRule(rule)
+            self._cur_objlist.append(ptr)
+
             return
 
 #
@@ -170,8 +191,12 @@ class ProfileParser:
             self.names_list.append(cp.name)
             self.entries[cp.name] = cp
 
-    def loadProfilesDir(self, path):
+    def loadProfilesDir(self, path, skip):
         for x in os.listdir(path):
+            if skip and x in skip:
+                print("Skipping profile due to skip_profile arg: " + x)
+                continue
+
             self.loadProfile(path, x)
 
     # XXX Add more getters here so that the underlying objects are opaque
@@ -189,6 +214,12 @@ class ProfileParser:
 
     def getNameList(self):
         return self.names_list
+
+    def getFilename(self, name):
+        if name in self.entries:
+            return self.entries[name].filename
+        else:
+            return None
 
     def getPath(self, name):
         if name in self.entries:

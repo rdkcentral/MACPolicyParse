@@ -17,6 +17,7 @@
 import re
 from .Filter import *
 import sys
+import os
 
 class base_op:
     action = ""
@@ -89,14 +90,19 @@ class OpCapable(base_op):
             return True
         if "capname" in parsed_dict:
             return True
+        if "capable" in parsed_dict["operation"]:
+            return True
         return False
 
     def isDuplicate(self):
-        # XXX -- this can be replaced with the __eq__ function right?
         return False
 
-    def getDefaultRule(self): # XXX with __repr__ maybe we can remove this.
-        return "capability " + self.capname.strip("\"")
+    def getDefaultRule(self):
+        if self.capname:
+            return "capability " + self.capname.strip("\"")
+
+        if self.name:
+            return "capability " + self.name.strip("\"")
 
     def __hash__(self):
         return hash(("capability ", self.capname.strip("\"")))
@@ -241,6 +247,9 @@ class OpFile(base_op):
         if "mod_" in filename:
             return filename
 
+        if not re.fullmatch("[A-Za-z\+\_\-0-9\.\*]+\.so([\s\.\0-9\*]+)?", os.path.basename(filename)):
+            return filename
+
         # There are cases that are not libraries: ld.so.*, mod_* (httpd modules), and ld-*.so
         # We also have the possibility of weirdness with /lib /usr/lib, etc, so break up
         # the path, then operate only on the filename, not assuming a 'lib' prefix
@@ -258,7 +267,7 @@ class OpFile(base_op):
         new_rule += lib_path
 
         # If we match a version (-1.1.1.1) then replace with a wildcard
-        ver_regex = "([A-Za-z\+]+)+(-[0-9]\.)"
+        ver_regex = "([A-Za-z\+\_]+)+(-[0-9]\.)"
         m = re.match(ver_regex, lib_name)
 
         if m:
@@ -276,7 +285,7 @@ class OpFile(base_op):
         new_rule += ".so"
 
         # If we match a suffix (.0.0.0) then replace with a wildcard
-        suffix_regex = ".*\.so\.[0-9]"
+        suffix_regex = ".*\.so\.[0-9a-zA-Z]"
         m = re.match(suffix_regex, lib_name)
         if m:
             new_rule += "*"
@@ -312,7 +321,8 @@ class OpFile(base_op):
             return False
         if "ptrace" in parsed_dict["operation"]:
             return False
-
+        if "capable" in parsed_dict["operation"]:
+            return False
         if "requested_mask" in parsed_dict:
             return True
         if "denied_mask" in parsed_dict:

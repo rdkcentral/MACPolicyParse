@@ -15,6 +15,7 @@
 #
 
 import re
+import os
 from .Diff import *
 
 class ProfileBase:
@@ -34,7 +35,9 @@ class ProfileBase:
             return False
 
         if size != None and len(rule) != size:
-            #print("validateList failure.")
+            # This function is called for identification of types, which
+            #d means this is a non-error since it'll be called on everything
+            #print("validateList len failure.")
             return False
 
         return True
@@ -78,22 +81,29 @@ class ProfileHeaderRule(ProfileBase):
         if not self.isType(rule):
             return None
 
-        # XXX Add more validation here
+        # Some profiles have excessive spacing, remove those to avoid problems with
+        # naming.
+        while('' in rule):
+            rule.remove('')
+
         self.name = rule[1]
         self.path = rule[2]
-        self.flags = rule[3]
-        # XXX Add flags
+        if len(rule) <= 3:
+            self.flags = rule[3]
+        else:
+            for idx, x, in enumerate(rule[3:]):
+                if "{" in x:
+                    break
+                if ")" not in x:
+                    self.flags += x + ", "
+                else:
+                    self.flags += x
 
-    #
-    # This could be better, but profiles are a special case, hence why
-    # they are handled here instead of getDefaultRule()
-    def genProfileHeader(self, name, path, mode="complain"):
-        self.profile_type.name = name
-        self.profile_type.path = path
-        # Ignore flags for now
-
-        flags = f"flags=({mode})"
-        return f"profile {name + path + flags}{{\n"
+   # We use this instead of getDefaultRule() since it's not part of the other
+    # class calls
+    def getProfileHeader(self):
+        hdr = "profile " + self.name + " " + self.path + " " + self.flags + " {"
+        return hdr
 
     def getDefaultRule(self):
         # Ignore the profile rules
@@ -117,6 +127,10 @@ class FileRule(ProfileBase):
         if ".so" in self.filename:
             self.filename = self.fixLibraryVersions(self.filename)
 
+            if self.filename == "" or self.filename == None:
+                # Empty spaces are cleaned up elsewhere
+                return ""
+
         return self.filename + " " + self.permissions
 
     def isType(self, rule):
@@ -125,7 +139,7 @@ class FileRule(ProfileBase):
 
         # XXX Possibly incomplete
         # XXX This currently doesn't handle cases whee the filename doesn't start with a slash
-        file_perm_list = ['r', 'w', 'm', 'x', 'a', 'c', 'd']
+        file_perm_list = ['r', 'w', 'm', 'x', 'a', 'c', 'd', 'k']
         perm_result = [ele for ele in file_perm_list if(ele in rule[1])]
         if rule[0].startswith("/") and bool(perm_result):
             return True
@@ -159,6 +173,13 @@ class FileRule(ProfileBase):
         if "mod_" in filename:
             return filename
 
+        if not re.fullmatch("[A-Za-z\+\_\-0-9\.\*]+\.so([\s\.\0-9\*]+)?", os.path.basename(filename)):
+            return filename
+
+        if filename == "/lib*.so*":
+            # This is to remove an old, bad entry that was inserted due to a bug
+            return ""
+
         # There are cases that are not libraries: ld.so.*, mod_* (httpd modules), and ld-*.so
         # We also have the possibility of weirdness with /lib /usr/lib, etc, so break up
         # the path, then operate only on the filename, not assuming a 'lib' prefix
@@ -176,7 +197,7 @@ class FileRule(ProfileBase):
         new_rule += lib_path
 
         # If we match a version (-1.1.1.1) then replace with a wildcard
-        ver_regex = "([A-Za-z\+]+)+(-[0-9]\.)"
+        ver_regex = "(.+)-([0-9]\.)+"
         m = re.match(ver_regex, lib_name)
 
         if m:
@@ -199,6 +220,14 @@ class FileRule(ProfileBase):
         if m:
             new_rule += "*"
 
+        # Don't remove existing .so* sequences
+        if ".so*" in lib_name:
+            new_rule += "*"
+
+        if ".so.*" in lib_name:
+            new_rule = new_rule.replace(".so.*", ".so")
+            new_rule += "*"
+
         self.handled = True
 
         # This can happen if there is a bug here or a format we do not expect, it's not
@@ -207,7 +236,9 @@ class FileRule(ProfileBase):
             print("ERROR: fixLibraryVersions() created an invalid entry due to a bug")
             print("-> Original filename: ")
             print(filename)
-            print("Please submit the filename above as a bug report with this error.")
+            print("First, please verify there are no \"lib*.so*\" entries in the input profiles.")
+            print("If there are, please remove them and try again. If there are not, then ")
+            print("please submit the filename above as a bug report with this error.")
             sys.exit(0)
 
         return new_rule
@@ -381,3 +412,70 @@ class TransitionProfileRule(ProfileBase):
             rule_str += "   }\n"
 
             return rule_str
+
+class IncludeRule(ProfileBase):
+
+    def __init__(self):
+        ProfileBase.__init__(self)
+        self.priority = 120
+        self.include_path = ""
+
+        return
+
+    def getDefaultRule(self):
+        # XXX validate
+        return "#include " + self.include_path
+
+    def isType(self, rule):
+        rule = [ele for ele in rule if ele.strip()]
+        if not ProfileBase.validateList(ProfileBase(), rule, 2):
+            return False
+
+        if rule[0] == ("#include"):
+            return True
+
+        return False
+
+    def parse(self, rule):
+        if not ProfileBase.validateList(ProfileBase(), rule, 2):
+            return None
+
+        if not self.isType(rule):
+            return None
+
+        self.include_path = rule[1]
+
+# These are rules that fall into the unknown bucket. In order to
+# preserve the sanity of existing profiles, we error on this during
+# parsing, but we can't discard these cases. We retain the rule as
+# raw text but add an error that it needs to be sent in and filed
+# as an issue so we can add support for the rule type
+class RawRule(ProfileBase):
+    raw_rule = ""
+    def __init__(self, line_num=-1):
+        ProfileBase.__init__(self)
+        self.priority = 12
+        self.raw_rule = ""
+        return
+
+    def getDefaultRule(self):
+        return " ".join(self.raw_rule)
+
+    def isType(self, rule):
+        # This can be dangerous, we have to explicitly call this instead of using
+        # isType() checks. We always return false here, but this should never
+        # be called.
+        print("WARNING: RawRule.isType() should never be called.\n")
+        return False
+
+    def parse(self, rule):
+        print("WARNING: RawRule.parse() should never be called.\n")
+        return None
+
+    def setRawRule(self, rule_txt):
+        self.raw_rule = rule_txt
+
+    # XXX Fix this
+    def diff(self, obj_list):
+        return None
+
